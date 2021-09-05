@@ -3,22 +3,21 @@ package jp.techacademy.ayumi.qa_app
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import kotlinx.android.synthetic.main.activity_main.*
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle    // ← 追加
 import androidx.core.view.GravityCompat    // ← 追加
 import com.google.android.material.navigation.NavigationView    // ← 追加
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth  // ← 追加
 // findViewById()を呼び出さずに該当Viewを取得するために必要となるインポート宣言
-import kotlinx.android.synthetic.main.activity_main.*  // ← 追加
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*    // ← 追加
 
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private var mGenre = 0    /
+    private var mGenre = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,27 +27,45 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setSupportActionBar(toolbar)
 
         // fabにClickリスナーを登録
-        fab.setOnClickListener { _ ->
+        fab.setOnClickListener { view ->
+            // ジャンルを選択していない場合（mGenre == 0）はエラーを表示するだけ
+            if (mGenre == 0) {
+                Snackbar.make(view, getString(R.string.question_no_select_genre), Snackbar.LENGTH_LONG).show()
+            } else {
+
+            }
             // ログイン済みのユーザーを取得する
             val user = FirebaseAuth.getInstance().currentUser
 
-            // ログインしていなければログイン画面に遷移させる
             if (user == null) {
+            // ログインしていなければログイン画面に遷移させる
                 val intent = Intent(applicationContext, LoginActivity::class.java)
                 startActivity(intent)
-    }
-}
-// ～～ ここから
+            } else {
+                // ジャンルを渡して質問作成画面を起動する
+                val intent = Intent(applicationContext, QuestionSendActivity::class.java)
+                intent.putExtra("genre", mGenre)
+                startActivity(intent)
+            }
+        }
+
         // ナビゲーションドロワーの設定
         val toggle = ActionBarDrawerToggle(this, drawer_layout, toolbar, R.string.app_name, R.string.app_name)
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
-        nav_view.setNavigationItemSelectedListener(this)
-
-    // ～～ ここまで
-
+        val navigationView = findViewById<NavigationView>(R.id.nav_view)
+        navigationView.setNavigationItemSelectedListener(this)
 }
+    override fun onResume() {
+        super.onResume()
+        val navigationView = findViewById<NavigationView>(R.id.nav_view)
+
+        // 1:趣味を既定の選択とする
+        if(mGenre == 0) {
+            onNavigationItemSelected(navigationView.menu.getItem(0))
+        }
+    }
 
 override fun onCreateOptionsMenu(menu: Menu): Boolean {
     // Inflate the menu; this adds items to the action bar if it is present.
